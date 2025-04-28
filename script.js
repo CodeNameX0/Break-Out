@@ -83,13 +83,16 @@ function touchMoveHandler(e) {
 
 // Update paddle position based on touch
 function updatePaddlePosition(touchX) {
-    paddleX = touchX - paddleWidth / 2;
+    // Smoothly update paddle position
+    const targetX = touchX - paddleWidth / 2;
 
     // Prevent paddle from going out of bounds
-    if (paddleX < 0) {
+    if (targetX < 0) {
         paddleX = 0;
-    } else if (paddleX + paddleWidth > canvas.width) {
+    } else if (targetX + paddleWidth > canvas.width) {
         paddleX = canvas.width - paddleWidth;
+    } else {
+        paddleX = targetX;
     }
 }
 
