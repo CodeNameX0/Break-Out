@@ -10,7 +10,7 @@ const ballRadius = 10;
 
 // Paddle properties
 const paddleHeight = 10;
-const paddleWidth = 100; // 패들 너비를 85에서 100으로 확장
+const paddleWidth = 100; // 패들 너비를 100으로 설정
 let paddleX = (canvas.width - paddleWidth) / 2;
 
 // Key controls
@@ -37,9 +37,11 @@ for (let c = 0; c < brickColumnCount; c++) {
 // Score
 let score = 0;
 
-// Event listeners for key presses
+// Event listeners for key presses and touch events
 document.addEventListener("keydown", keyDownHandler);
 document.addEventListener("keyup", keyUpHandler);
+canvas.addEventListener("touchstart", touchStartHandler);
+canvas.addEventListener("touchmove", touchMoveHandler);
 
 function keyDownHandler(e) {
     if (e.key === "Right" || e.key === "ArrowRight") {
@@ -55,6 +57,31 @@ function keyUpHandler(e) {
     } else if (e.key === "Left" || e.key === "ArrowLeft") {
         leftPressed = false;
     }
+}
+
+// Handle touch start
+function touchStartHandler(e) {
+    const touchX = e.touches[0].clientX - canvas.offsetLeft;
+    if (touchX > paddleX + paddleWidth / 2) {
+        rightPressed = true;
+    } else if (touchX < paddleX + paddleWidth / 2) {
+        leftPressed = true;
+    }
+}
+
+// Handle touch move
+function touchMoveHandler(e) {
+    const touchX = e.touches[0].clientX - canvas.offsetLeft;
+    paddleX = touchX - paddleWidth / 2;
+
+    // Prevent paddle from going out of bounds
+    if (paddleX < 0) {
+        paddleX = 0;
+    } else if (paddleX + paddleWidth > canvas.width) {
+        paddleX = canvas.width - paddleWidth;
+    }
+
+    e.preventDefault(); // Prevent scrolling during touch
 }
 
 // Draw the ball
@@ -168,36 +195,3 @@ function draw() {
 
 // Game loop
 const interval = setInterval(draw, 10);
-
-// Event listeners for key presses and touch events
-document.addEventListener("keydown", keyDownHandler);
-document.addEventListener("keyup", keyUpHandler);
-canvas.addEventListener("touchstart", touchStartHandler);
-canvas.addEventListener("touchmove", touchMoveHandler);
-
-// ... 기존 코드 ...
-
-// Handle touch start
-function touchStartHandler(e) {
-    const touchX = e.touches[0].clientX - canvas.offsetLeft;
-    if (touchX > paddleX + paddleWidth / 2) {
-        rightPressed = true;
-    } else if (touchX < paddleX + paddleWidth / 2) {
-        leftPressed = true;
-    }
-}
-
-// Handle touch move
-function touchMoveHandler(e) {
-    const touchX = e.touches[0].clientX - canvas.offsetLeft;
-    paddleX = touchX - paddleWidth / 2;
-
-    // Prevent paddle from going out of bounds
-    if (paddleX < 0) {
-        paddleX = 0;
-    } else if (paddleX + paddleWidth > canvas.width) {
-        paddleX = canvas.width - paddleWidth;
-    }
-
-    e.preventDefault(); // Prevent scrolling during touch
-}
