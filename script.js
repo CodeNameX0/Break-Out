@@ -2,11 +2,11 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 // Ball properties
-let x = canvas.width / 2;
+const ballRadius = 10;
+let x = Math.random() * (canvas.width - 2 * ballRadius) + ballRadius; // 무작위 시작 위치
 let y = canvas.height - 30;
 let dx = 2;
 let dy = -2;
-const ballRadius = 10;
 
 // Paddle properties
 const paddleHeight = 10;
@@ -27,15 +27,23 @@ const brickOffsetTop = 30;
 const brickOffsetLeft = (canvas.width - (brickColumnCount * (brickWidth + brickPadding) - brickPadding)) / 2; // 중앙 정렬
 
 let bricks = [];
-for (let c = 0; c < brickColumnCount; c++) {
-    bricks[c] = [];
-    for (let r = 0; r < brickRowCount; r++) {
-        bricks[c][r] = { x: 0, y: 0, status: 1 }; // status: 1 means the brick is visible
+function initializeBricks() {
+    bricks = [];
+    for (let c = 0; c < brickColumnCount; c++) {
+        bricks[c] = [];
+        for (let r = 0; r < brickRowCount; r++) {
+            bricks[c][r] = { x: 0, y: 0, status: 1 }; // status: 1 means the brick is visible
+        }
     }
 }
+initializeBricks();
 
-// Score
+// Score and Level
 let score = 0;
+let level = 1;
+
+// Game state
+let gameStarted = false;
 
 // Event listeners for key presses and touch events
 document.addEventListener("keydown", keyDownHandler);
@@ -62,16 +70,19 @@ function keyUpHandler(e) {
 // Handle touch start
 function touchStartHandler(e) {
     const touchX = e.touches[0].clientX - canvas.offsetLeft;
-    if (touchX > paddleX + paddleWidth / 2) {
-        rightPressed = true;
-    } else if (touchX < paddleX + paddleWidth / 2) {
-        leftPressed = true;
-    }
+    updatePaddlePosition(touchX);
+    e.preventDefault(); // Prevent scrolling during touch
 }
 
 // Handle touch move
 function touchMoveHandler(e) {
     const touchX = e.touches[0].clientX - canvas.offsetLeft;
+    updatePaddlePosition(touchX);
+    e.preventDefault(); // Prevent scrolling during touch
+}
+
+// Update paddle position based on touch
+function updatePaddlePosition(touchX) {
     paddleX = touchX - paddleWidth / 2;
 
     // Prevent paddle from going out of bounds
@@ -80,8 +91,6 @@ function touchMoveHandler(e) {
     } else if (paddleX + paddleWidth > canvas.width) {
         paddleX = canvas.width - paddleWidth;
     }
-
-    e.preventDefault(); // Prevent scrolling during touch
 }
 
 // Draw the ball
@@ -121,11 +130,12 @@ function drawBricks() {
     }
 }
 
-// Draw the score
-function drawScore() {
+// Draw the score and level
+function drawScoreAndLevel() {
     ctx.font = "16px Arial";
     ctx.fillStyle = "#0095DD";
     ctx.fillText("Score: " + score, 8, 20);
+    ctx.fillText("Level: " + level, canvas.width - 80, 20);
 }
 
 // Collision detection for bricks
@@ -143,15 +153,25 @@ function collisionDetection() {
                     dy = -dy;
                     b.status = 0; // Brick is destroyed
                     score++;
-                    if (score === brickRowCount * brickColumnCount) {
-                        alert("YOU WIN, CONGRATULATIONS!");
-                        document.location.reload();
-                        clearInterval(interval); // Stop the game loop
+                    if (score === brickRowCount * brickColumnCount * level) {
+                        nextLevel();
                     }
                 }
             }
         }
     }
+}
+
+// Move to the next level
+function nextLevel() {
+    alert("Level " + level + " Complete!");
+    level++;
+    dx *= 1.2; // Increase ball speed
+    dy *= 1.2;
+    initializeBricks(); // Reset bricks
+    x = Math.random() * (canvas.width - 2 * ballRadius) + ballRadius; // Reset ball position
+    y = canvas.height - 30;
+    paddleX = (canvas.width - paddleWidth) / 2; // Reset paddle position
 }
 
 // Update the canvas
@@ -160,7 +180,7 @@ function draw() {
     drawBricks();
     drawBall();
     drawPaddle();
-    drawScore();
+    drawScoreAndLevel();
     collisionDetection();
 
     // Ball collision with walls
@@ -175,9 +195,9 @@ function draw() {
             dy = -dy;
         } else {
             // Game over
-            alert("GAME OVER");
-            document.location.reload();
-            clearInterval(interval); // Stop the game loop
+            alert("GAME OVER! You reached Level " + level);
+            document.location.reload(); // Reload the page
+            return;
         }
     }
 
@@ -191,7 +211,30 @@ function draw() {
     // Update ball position
     x += dx;
     y += dy;
+
+    requestAnimationFrame(draw); // Use requestAnimationFrame for smoother animation
 }
 
-// Game loop
-const interval = setInterval(draw, 10);
+// Start the game
+function startGame() {
+    if (!gameStarted) {
+        gameStarted = true;
+        draw(); // Start the game loop
+    }
+}
+
+// Add a "Start" button
+const startButton = document.createElement("button");
+startButton.textContent = "Start";
+startButton.style.position = "absolute";
+startButton.style.top = "50%";
+startButton.style.left = "50%";
+startButton.style.transform = "translate(-50%, -50%)";
+startButton.style.padding = "10px 20px";
+startButton.style.fontSize = "16px";
+document.body.appendChild(startButton);
+
+startButton.addEventListener("click", () => {
+    startButton.style.display = "none"; // Hide the button
+    startGame();
+});
