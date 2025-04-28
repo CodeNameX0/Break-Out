@@ -168,3 +168,36 @@ function draw() {
 
 // Game loop
 const interval = setInterval(draw, 10);
+
+// Event listeners for key presses and touch events
+document.addEventListener("keydown", keyDownHandler);
+document.addEventListener("keyup", keyUpHandler);
+canvas.addEventListener("touchstart", touchStartHandler);
+canvas.addEventListener("touchmove", touchMoveHandler);
+
+// ... 기존 코드 ...
+
+// Handle touch start
+function touchStartHandler(e) {
+    const touchX = e.touches[0].clientX - canvas.offsetLeft;
+    if (touchX > paddleX + paddleWidth / 2) {
+        rightPressed = true;
+    } else if (touchX < paddleX + paddleWidth / 2) {
+        leftPressed = true;
+    }
+}
+
+// Handle touch move
+function touchMoveHandler(e) {
+    const touchX = e.touches[0].clientX - canvas.offsetLeft;
+    paddleX = touchX - paddleWidth / 2;
+
+    // Prevent paddle from going out of bounds
+    if (paddleX < 0) {
+        paddleX = 0;
+    } else if (paddleX + paddleWidth > canvas.width) {
+        paddleX = canvas.width - paddleWidth;
+    }
+
+    e.preventDefault(); // Prevent scrolling during touch
+}
